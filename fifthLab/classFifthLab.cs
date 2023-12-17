@@ -124,20 +124,13 @@ namespace fifthLab
         }
         public static Operation Parse(string input)
         {
-            if (char.TryParse(input, out char output) && input != null && input.Length == 1)
+            if (TryParse(input, out Operation output))
             {
-                if ("+-*/".Contains(output))
-                {
-                    return new Operation(output);
-                }
-                else
-                {
-                    throw new ArgumentException("1");
-                }
+                return output;
             }
             else
             {
-                throw new ArgumentException("2"); 
+                throw new ArgumentException("Parse is impossible");
             }
         }
         public static string ParseToString(Operation _operation)
@@ -195,12 +188,12 @@ namespace fifthLab
                 }
                 else
                 {
-                    throw new ArgumentException("3");
+                    throw new ArgumentException("Parse is impossible");
                 }
             }
             else
             {
-                throw new ArgumentException("4");
+                throw new ArgumentException("Parse is impossible");
             }
         }
         public static string ParseToString(Parenthesis _bracket)

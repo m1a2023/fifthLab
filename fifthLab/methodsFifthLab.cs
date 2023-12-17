@@ -51,7 +51,6 @@ namespace fifthLab
                     token.Add(outputBracket);
                 }
             }
-             
             return token;
         }
 
@@ -73,7 +72,7 @@ namespace fifthLab
                     {
                         output.Add(stack.Pop());
                     }
-                    stack.Push(Operation.Parse(token));
+                    stack.Push(token);
                 }
 
                 else if (token is Parenthesis && Parenthesis.Parse(token).isOpen)
@@ -104,7 +103,7 @@ namespace fifthLab
 
             foreach (Token token in inputTokens)
             {
-                if (Number.TryParse(token, out Number number))
+                if (Number.TryParse(token.token, out Number number))
                 {
                     stack.Push(number);
                 }
