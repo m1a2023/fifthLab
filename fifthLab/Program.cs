@@ -4,9 +4,10 @@ class Program
 {
     static void Main()
     {
-        Number num1 = new Number(5);
-        Number num2 = new Number(9);
-        Number result = num1 + num2;
-        Console.WriteLine(result.Value);
+        string inputConsole = Console.ReadLine();
+        List<Token> TokenList = RPN.TokenListMake(inputConsole);
+        List<Token> TokenListRPN = RPN.RewriteToRPN(TokenList);
+        Number result = RPN.CalculateRPN(TokenListRPN);
+        Console.WriteLine(result.value);
     }
 }
