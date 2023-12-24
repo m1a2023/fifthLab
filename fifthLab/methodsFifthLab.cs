@@ -10,48 +10,35 @@ namespace fifthLab
     {
         public static List<Token> TokenListMake(string input)
         {
-            List<Token> token = new List<Token>(); string numberLine = null;
-
-            foreach (char pieceInput in input)
+            List<Token> tokens = new List<Token>(); string numberString = null;
+            for (int i = 0; i < input.Length; i++)
             {
-                if (char.IsDigit(pieceInput))
+                if (char.IsDigit(input[i]))
                 {
-                    numberLine += pieceInput;
+                    numberString += input[i];
                 }
-                else
+                else if (input[i] != ' ')
                 {
-                    if (pieceInput !=  ' ')
+                    tokens.Add(Number.Parse(numberString));
+                    if (Operation.TryParse(input[i].ToString(), out Operation outputOperation))
                     {
-                        token.Add(Number.Parse(numberLine));
-                        if (Operation.TryParse(pieceInput.ToString(), out Operation outputOperator))
-                        {
-                            token.Add(outputOperator);
-                        }
-                        else if (Parenthesis.TryParse(pieceInput.ToString(), out Parenthesis outputBracket))
-                        {
-                            token.Add(outputBracket);
-                        }
-                        numberLine = null; 
+                        tokens.Add(outputOperation);
                     }
+                    else if (Parenthesis.TryParse(input[i].ToString(), out Parenthesis outputBracket))
+                    {
+                        tokens.Add(outputBracket);
+                    }
+                    numberString = null;
                 }
             }
-
-            if (!string.IsNullOrEmpty(numberLine))
+            if (!string.IsNullOrEmpty(numberString))
             {
-                if (Number.TryParse(numberLine.ToString(), out Number outputNumber))
+                if (Number.TryParse(numberString, out Number outputNumber))
                 {
-                    token.Add(outputNumber);
-                }
-                else if (Operation.TryParse(numberLine.ToString(), out Operation outputOperator))
-                {
-                    token.Add(outputOperator);
-                }
-                else if (Parenthesis.TryParse(numberLine.ToString(), out Parenthesis outputBracket))
-                {
-                    token.Add(outputBracket);
+                    tokens.Add(outputNumber);
                 }
             }
-            return token;
+            return tokens;
         }
 
         public static List<Token> RewriteToRPN(List<Token> inputTokens)
@@ -61,32 +48,38 @@ namespace fifthLab
 
             foreach (Token token in inputTokens)
             {
-                if (token is Number)
+                if (Number.TryParse(token.ToString(), out Number outputNumber))
                 {
-                    output.Add(token);
+                    output.Add(outputNumber);
                 }
 
-                else if (token is Operation)
+                else if (Operation.TryParse(token.ToString(), out Operation outputOperator))
                 {
-                    while (stack.Count > 0 && Operation.Parse(token).priority <= Operation.Parse(stack.Peek()).priority)
+                    while (stack.Count > 0 && outputOperator.priority <= Operation.Parse(stack.Peek().ToString()).priority)
                     {
                         output.Add(stack.Pop());
                     }
                     stack.Push(token);
                 }
 
-                else if (token is Parenthesis && Parenthesis.Parse(token).isOpen)
+                else if (Parenthesis.TryParse(token.ToString(), out Parenthesis bracketOpen))
                 {
-                    stack.Push(Parenthesis.Parse(token));
+                    if (bracketOpen.isOpen)
+                    {
+                        stack.Push(bracketOpen);
+                    }
                 }
 
-                else if (token is Parenthesis && !Parenthesis.Parse(token).isOpen)
+                else if (Parenthesis.TryParse(token.ToString(), out Parenthesis bracketClose))
                 {
-                    while (stack.Count > 0 && Parenthesis.Parse(stack.Peek()).isOpen)
+                    if (!bracketClose.isOpen)
                     {
-                        output.Add(stack.Pop());
+                        while (stack.Count > 0 && Parenthesis.Parse(stack.Peek().ToString()).isOpen)
+                        {
+                            output.Add(stack.Pop());
+                        }
+                        stack.Pop();
                     }
-                    stack.Pop();
                 }
             }
             while (stack.Count > 0)
@@ -103,7 +96,7 @@ namespace fifthLab
 
             foreach (Token token in inputTokens)
             {
-                if (Number.TryParse(token.token, out Number number))
+                if (Number.TryParse(token.ToString(), out Number number))
                 {
                     stack.Push(number);
                 }
@@ -111,7 +104,7 @@ namespace fifthLab
                 {
                     Number firstOperand = stack.Pop();
                     Number secondOperand = stack.Pop();
-                    Number result = Perform(Operation.Parse(token), firstOperand, secondOperand);
+                    Number result = Perform(Operation.Parse(token.ToString()), firstOperand, secondOperand);
 
                     stack.Push(result);
                 }

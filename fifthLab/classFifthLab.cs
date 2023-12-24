@@ -17,14 +17,6 @@ namespace fifthLab
     {
         //Number, operation and parenthesis
         public string token { get; set; }
-        public static implicit operator string(Token _token)
-        {
-            return _token.token;
-        }
-        public void Print()
-        {
-            Console.WriteLine(token);
-        }
     }
 
     class Number : Token
@@ -88,7 +80,6 @@ namespace fifthLab
             }
             output = new Number(double.Parse(input));
             return true;
-
         }
     }
 
@@ -118,10 +109,7 @@ namespace fifthLab
                 throw new ArgumentException("Incorrect operation!");
             }
         }
-        public static explicit operator char(Operation _operator)
-        {
-            return _operator.operation;
-        }
+        public static implicit operator char(Operation _operator) => _operator.operation;
         public static Operation Parse(string input)
         {
             if (TryParse(input, out Operation output))
@@ -133,9 +121,9 @@ namespace fifthLab
                 throw new ArgumentException("Parse is impossible");
             }
         }
-        public static string ParseToString(Operation _operation)
+        public static char GetOperator(Operation _operation)
         {
-            return _operation.operation.ToString();
+            return _operation.operation;
         }
         public static bool TryParse([NotNullWhen(true)] string? input, out Operation output)
         {

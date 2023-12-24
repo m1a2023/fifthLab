@@ -9,5 +9,6 @@ class Program
         List<Token> TokenListRPN = RPN.RewriteToRPN(TokenList);
         Number result = RPN.CalculateRPN(TokenListRPN);
         Console.WriteLine(result.value);
+
     }
 }
