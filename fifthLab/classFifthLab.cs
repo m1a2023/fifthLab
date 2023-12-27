@@ -16,7 +16,7 @@ namespace fifthLab
     class Token
     {
         //Number, operation and parenthesis
-        public string token { get; set; }
+        
     }
 
     class Number : Token
@@ -27,6 +27,8 @@ namespace fifthLab
         {
             value = _value;
         }
+
+        //new operators for Number
         public static Number operator +(Number x, Number y)
         {
             return new Number(x.value + y.value);
@@ -51,17 +53,16 @@ namespace fifthLab
             }
         }
 
+        //simpler output
         public static implicit operator double(Number _value)
         {
             return _value.value;
         }
+
+        //parsing - useful!
         public static Number Parse(string input)
         {
             return new Number(double.Parse(input));
-        }
-        public static string ParseToString(Number _number)
-        {
-            return _number.value.ToString();
         }
         public static bool TryParse([NotNullWhen(true)] string? input, out Number output)
         {
@@ -72,7 +73,7 @@ namespace fifthLab
             }
             for (int i = 0; i < input.Length; i++)
             {
-                if (!"1234567890".Contains(input[i]))
+                if (!char.IsDigit(input[i]))
                 {
                     output = new Number(0);
                     return false;
@@ -91,17 +92,24 @@ namespace fifthLab
         public Operation(char _operation)
         {
             operation = _operation;
+            if (IsOperator(_operation))
+            {
+                priority = GetPriority(_operation);
+            }
         }
-        private int Priority(char operation)
+
+        //parsing and other methods for Operation
+        private static int GetPriority(char operation)
         {
             if ("+-*/".Contains(operation))
             {
-                return priority = operation switch
+                return operation switch
                 {
                     '*' => 2,
                     '/' => 2,
                     '-' => 1,
                     '+' => 1,
+                    _ => throw new ArgumentException("Incorrect operation!")
                 };
             }
             else
@@ -109,7 +117,6 @@ namespace fifthLab
                 throw new ArgumentException("Incorrect operation!");
             }
         }
-        public static implicit operator char(Operation _operator) => _operator.operation;
         public static Operation Parse(string input)
         {
             if (TryParse(input, out Operation output))
@@ -120,10 +127,6 @@ namespace fifthLab
             {
                 throw new ArgumentException("Parse is impossible");
             }
-        }
-        public static char GetOperator(Operation _operation)
-        {
-            return _operation.operation;
         }
         public static bool TryParse([NotNullWhen(true)] string? input, out Operation output)
         {
@@ -143,6 +146,14 @@ namespace fifthLab
             output = new Operation(input[0]);
             return true;
         }
+        public static bool IsOperator(char symbol)
+        {
+            if ("+-*/".Contains(symbol))
+            {
+                return true;
+            }
+            return false;
+        }
     }
 
     class Parenthesis : Token
@@ -153,17 +164,20 @@ namespace fifthLab
         public Parenthesis(char _bracket)
         {
             bracket = _bracket;
+            if (IsBracket(_bracket))
+            {
+                isOpen = Transparency(_bracket);
+            }
         }
-        public static implicit operator char(Parenthesis _bracket)
+
+        //parsing and other methods for Parenthesis
+        private bool Transparency(char _bracket)
         {
-            return _bracket.bracket;
-        }
-        private bool Transparency(char bracket)
-        {
-            return isOpen = bracket switch
+            return isOpen = _bracket switch
             {
                 '(' => true,
-                ')' => false
+                ')' => false,
+                _ => throw new ArgumentException("Incorrect bracket!")
             };
         }
         public static Parenthesis Parse(string input)
@@ -184,10 +198,6 @@ namespace fifthLab
                 throw new ArgumentException("Parse is impossible");
             }
         }
-        public static string ParseToString(Parenthesis _bracket)
-        {
-            return _bracket.bracket.ToString();
-        }
         public static bool TryParse([NotNullWhen(true)] string? input, out  Parenthesis output)
         {
             output = new Parenthesis('\0');
@@ -205,6 +215,14 @@ namespace fifthLab
             }
             output = new Parenthesis(input[0]);
             return true;
+        }
+        public static bool IsBracket(char _bracket)
+        {
+            if ("()".Contains(_bracket))
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

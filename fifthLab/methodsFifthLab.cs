@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace fifthLab
 {
@@ -10,7 +7,8 @@ namespace fifthLab
     {
         public static List<Token> TokenListMake(string input)
         {
-            List<Token> tokens = new List<Token>(); string numberString = null;
+            List<Token> tokens = new List<Token>();
+            string numberString = null;
             for (int i = 0; i < input.Length; i++)
             {
                 if (char.IsDigit(input[i]))
@@ -19,7 +17,10 @@ namespace fifthLab
                 }
                 else if (input[i] != ' ')
                 {
-                    tokens.Add(Number.Parse(numberString));
+                    if (Number.TryParse(numberString, out Number outputNumber))
+                    {
+                        tokens.Add(outputNumber);
+                    }
                     if (Operation.TryParse(input[i].ToString(), out Operation outputOperation))
                     {
                         tokens.Add(outputOperation);
@@ -28,6 +29,7 @@ namespace fifthLab
                     {
                         tokens.Add(outputBracket);
                     }
+                    
                     numberString = null;
                 }
             }
@@ -41,84 +43,91 @@ namespace fifthLab
             return tokens;
         }
 
-        public static List<Token> RewriteToRPN(List<Token> inputTokens)
+        public static List<Token> RewriteToRPN(List<Token> tokens)
         {
-            Stack<Token> stack = new Stack<Token>();
             List<Token> output = new List<Token>();
-
-            foreach (Token token in inputTokens)
+            Stack<Token> stack = new Stack<Token>();
+            foreach (Token token in tokens)
             {
-                if (Number.TryParse(token.ToString(), out Number outputNumber))
+                if (stack.Count == 0 && !(token is Number))
                 {
-                    output.Add(outputNumber);
-                }
-
-                else if (Operation.TryParse(token.ToString(), out Operation outputOperator))
-                {
-                    while (stack.Count > 0 && outputOperator.priority <= Operation.Parse(stack.Peek().ToString()).priority)
-                    {
-                        output.Add(stack.Pop());
-                    }
                     stack.Push(token);
+                    continue;
                 }
-
-                else if (Parenthesis.TryParse(token.ToString(), out Parenthesis bracketOpen))
+                if (token is Operation)
                 {
-                    if (bracketOpen.isOpen)
+                    if (stack.Peek() is Parenthesis)
                     {
-                        stack.Push(bracketOpen);
+                        stack.Push(token);
+                        continue;
+                    }
+                    if (((Operation)token).priority > ((Operation)stack.Peek()).priority)
+                    {
+                        stack.Push(token);
+                    }
+                    else if (((Operation)token).priority <= ((Operation)stack.Peek()).priority)
+                    {
+                        while (stack.Count > 0 && !(token is Parenthesis))
+                        {
+                            output.Add(stack.Pop());
+                        }
+                        stack.Push(token);
                     }
                 }
-
-                else if (Parenthesis.TryParse(token.ToString(), out Parenthesis bracketClose))
+                else if (token is Parenthesis)
                 {
-                    if (!bracketClose.isOpen)
+                    if (!((Parenthesis)token).isOpen)
                     {
-                        while (stack.Count > 0 && Parenthesis.Parse(stack.Peek().ToString()).isOpen)
+                        while (!(stack.Peek() is Parenthesis))
                         {
                             output.Add(stack.Pop());
                         }
                         stack.Pop();
                     }
+                    else
+                    {
+                        stack.Push(token);
+                    }
+                }
+                else if (token is Number)
+                {
+                    output.Add(token);
                 }
             }
             while (stack.Count > 0)
             {
                 output.Add(stack.Pop());
             }
-
             return output;
         }
-
         public static Number CalculateRPN(List<Token> inputTokens)
         {
             Stack<Number> stack = new Stack<Number>();
-
             foreach (Token token in inputTokens)
             {
-                if (Number.TryParse(token.ToString(), out Number number))
+                if (token is Number)
                 {
-                    stack.Push(number);
+                    stack.Push((Number)token);
                 }
                 else if (token is Operation)
                 {
-                    Number firstOperand = stack.Pop();
-                    Number secondOperand = stack.Pop();
-                    Number result = Perform(Operation.Parse(token.ToString()), firstOperand, secondOperand);
-
+                    Number b = stack.Pop();
+                    Number a = stack.Pop();
+                    Number result = Perform((Operation)token, a, b);
                     stack.Push(result);
                 }
             }
             return stack.Pop();
         }
-        public static Number Perform(Operation Operator, Number firstNumber, Number secondNumber)
+        public static Number Perform(Operation inputOperation, Number inputA, Number inputB)
         {
-            return Operator.operation switch
+            return inputOperation.operation switch
             {
-                '+' => firstNumber + secondNumber,
-                '-' => firstNumber - secondNumber,
-                '*' => firstNumber * secondNumber,
-                '/' => firstNumber / secondNumber
+                '+' => inputA + inputB,
+                '-' => inputA - inputB,
+                '*' => inputA * inputB,
+                '/' => inputA / inputB,
+                _ => throw new ArgumentException("Invalid operation")
             };
         }
     }
